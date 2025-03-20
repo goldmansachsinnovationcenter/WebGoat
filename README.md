@@ -80,7 +80,7 @@ Download the latest WebGoat release from [https://github.com/WebGoat/WebGoat/rel
 
 ```shell
 export TZ=Europe/Amsterdam # or your timezone
-java -Dfile.encoding=UTF-8 -jar webgoat-2023.8.jar
+java -Dfile.encoding=UTF-8 -jar webgoat-2023.8.jar # Starts WebGoat with default settings
 ```
 
 Click the link in the log to start WebGoat.
