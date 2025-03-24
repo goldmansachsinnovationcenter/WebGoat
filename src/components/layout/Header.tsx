@@ -18,7 +18,7 @@ const Header: React.FC = () => {
         <Link to="/" className="logo"><span>Web</span>Goat</Link>
       </div>
       <div id="lesson-title-wrapper"></div>
-      <div style={{ position: 'absolute', width: '600px', zIndex: 3, top: '22px', right: '-90px' }}>
+      <div style={{ position: 'absolute', width: '600px', zIndex: 3, top: '35px', right: '-90px' }}>
         <input className="form-control" type="text" id="search" name="search" placeholder="Search menu" style={{ width: '200px', display: 'inline-block' }} />
         
         {/* WebWolf button */}

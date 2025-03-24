@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import '../../assets/css/main.css';
+import '../../assets/css/auth.css';
 
 interface LocationState {
   registered?: boolean;

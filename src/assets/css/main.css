@@ -89,7 +89,7 @@ img {
     height: 80px;
     padding: 0;
     position: relative;
-    background: url('img/logoBG.jpg') no-repeat 0px 0px;
+    background: url('../images/logoBG.jpg') no-repeat 0px 0px;
 }
 
 #header .logo {
