@@ -8,6 +8,7 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -48,15 +49,17 @@ public class SqlInjectionLesson6a implements AssignmentEndpoint {
   }
 
   public AttackResult injectableQuery(String accountName) {
-    String query = "";
+    String query = "SELECT * FROM user_data WHERE last_name = ?";
     try (Connection connection = dataSource.getConnection()) {
       boolean usedUnion = this.unionQueryChecker(accountName);
-      query = "SELECT * FROM user_data WHERE last_name = '" + accountName + "'";
-
-      return executeSqlInjection(connection, query, usedUnion);
+      try (PreparedStatement statement = connection.prepareStatement(query,
+              ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
+        statement.setString(1, accountName);
+        return executeSqlInjection(statement, usedUnion, query + " [" + accountName + "]");
+      }
     } catch (Exception e) {
       return failed(this)
-          .output(this.getClass().getName() + " : " + e.getMessage() + YOUR_QUERY_WAS + query)
+          .output(this.getClass().getName() + " : " + e.getMessage() + YOUR_QUERY_WAS + query + " [" + accountName + "]")
           .build();
     }
   }
@@ -65,16 +68,14 @@ public class SqlInjectionLesson6a implements AssignmentEndpoint {
     return accountName.matches("(?i)(^[^-/*;)]*)(\\s*)UNION(.*$)");
   }
 
-  private AttackResult executeSqlInjection(Connection connection, String query, boolean usedUnion) {
-    try (Statement statement =
-        connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
-
-      ResultSet results = statement.executeQuery(query);
+  private AttackResult executeSqlInjection(PreparedStatement statement, boolean usedUnion, String queryDisplay) {
+    try {
+      ResultSet results = statement.executeQuery();
 
       if (!((results != null) && results.first())) {
         return failed(this)
             .feedback("sql-injection.advanced.6a.no.results")
-            .output(YOUR_QUERY_WAS + query)
+            .output(YOUR_QUERY_WAS + queryDisplay)
             .build();
       }
 
@@ -85,9 +86,9 @@ public class SqlInjectionLesson6a implements AssignmentEndpoint {
       output.append(SqlInjectionLesson5a.writeTable(results, resultsMetaData));
       results.last();
 
-      return verifySqlInjection(output, appendingWhenSucceded, query);
+      return verifySqlInjection(output, appendingWhenSucceded, queryDisplay);
     } catch (SQLException sqle) {
-      return failed(this).output(sqle.getMessage() + YOUR_QUERY_WAS + query).build();
+      return failed(this).output(sqle.getMessage() + YOUR_QUERY_WAS + queryDisplay).build();
     }
   }
 
@@ -100,16 +101,16 @@ public class SqlInjectionLesson6a implements AssignmentEndpoint {
   }
 
   private AttackResult verifySqlInjection(
-      StringBuilder output, String appendingWhenSucceded, String query) {
+      StringBuilder output, String appendingWhenSucceded, String queryDisplay) {
     if (!(output.toString().contains("dave") && output.toString().contains("passW0rD"))) {
-      return failed(this).output(output.toString() + YOUR_QUERY_WAS + query).build();
+      return failed(this).output(output.toString() + YOUR_QUERY_WAS + queryDisplay).build();
     }
 
     output.append(appendingWhenSucceded);
     return success(this)
         .feedback("sql-injection.advanced.6a.success")
         .feedbackArgs(output.toString())
-        .output(" Your query was: " + query)
+        .output(" Your query was: " + queryDisplay)
         .build();
   }
 }
