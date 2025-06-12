@@ -42,14 +42,14 @@ public class SqlInjectionLesson5a implements AssignmentEndpoint {
   }
 
   protected AttackResult injectableQuery(String accountName) {
-    String query = "";
+    String query = "SELECT * FROM user_data WHERE first_name = ? and last_name = ?";
     try (Connection connection = dataSource.getConnection()) {
-      query =
-          "SELECT * FROM user_data WHERE first_name = 'John' and last_name = '" + accountName + "'";
-      try (Statement statement =
-          connection.createStatement(
+      try (PreparedStatement statement =
+          connection.prepareStatement(query,
               ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
-        ResultSet results = statement.executeQuery(query);
+        statement.setString(1, "John");
+        statement.setString(2, accountName);
+        ResultSet results = statement.executeQuery();
 
         if ((results != null) && (results.first())) {
           ResultSetMetaData resultsMetaData = results.getMetaData();
@@ -62,25 +62,25 @@ public class SqlInjectionLesson5a implements AssignmentEndpoint {
           if (results.getRow() >= 6) {
             return success(this)
                 .feedback("sql-injection.5a.success")
-                .output("Your query was: " + query + EXPLANATION)
+                .output("Your query was: " + query + " [John, " + accountName + "]" + EXPLANATION)
                 .feedbackArgs(output.toString())
                 .build();
           } else {
-            return failed(this).output(output.toString() + "<br> Your query was: " + query).build();
+            return failed(this).output(output.toString() + "<br> Your query was: " + query + " [John, " + accountName + "]").build();
           }
         } else {
           return failed(this)
               .feedback("sql-injection.5a.no.results")
-              .output("Your query was: " + query)
+              .output("Your query was: " + query + " [John, " + accountName + "]")
               .build();
         }
       } catch (SQLException sqle) {
-        return failed(this).output(sqle.getMessage() + "<br> Your query was: " + query).build();
+        return failed(this).output(sqle.getMessage() + "<br> Your query was: " + query + " [John, " + accountName + "]").build();
       }
     } catch (Exception e) {
       return failed(this)
           .output(
-              this.getClass().getName() + " : " + e.getMessage() + "<br> Your query was: " + query)
+              this.getClass().getName() + " : " + e.getMessage() + "<br> Your query was: " + query + " [John, " + accountName + "]")
           .build();
     }
   }
